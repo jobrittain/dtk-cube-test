@@ -170,6 +170,15 @@ void Application::Initialize(HWND window, int width, int height)
 	m_d3dContext->Map(pVBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);    // map the buffer
 	memcpy(ms.pData, OurVertices, sizeof(OurVertices));                 // copy the data
 	m_d3dContext->Unmap(pVBuffer, NULL);                                      // unmap the buffer
+	
+	ZeroMemory(&bd, sizeof(bd));
+
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(XMFLOAT4X4);
+	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+	m_d3dDevice->CreateBuffer(&bd, NULL, m_constBuffer.GetAddressOf());
+	m_d3dContext->VSSetConstantBuffers(0, 1, m_constBuffer.GetAddressOf());
 }
 
 // Executes the basic game loop.
@@ -188,8 +197,35 @@ void Application::Update(StepTimer const& timer)
 {
 	float elapsedTime = float(timer.GetElapsedSeconds());
 
-	// TODO: Add your game logic here.
-	elapsedTime;
+	auto cameraPosition = XMVectorSet(0.f, 0.f, -2.f, 0.f);
+	auto lookAtPosition = XMVectorSet(0.f, 0.f, 0.f, 0.f);
+	auto upDirection = XMVectorSet(0.f, 1.f, 0.f, 0.f);
+
+	static float rotation = 0.0f; rotation += 2.f * elapsedTime;
+
+	XMMATRIX matRotate, matView, matProjection, matFinal;
+
+	// create a rotation matrix
+	matRotate = XMMatrixRotationY(rotation);
+
+	// create a view matrix
+	matView = XMMatrixLookAtLH(cameraPosition, lookAtPosition, upDirection);
+
+	// create a projection matrix
+	matProjection = XMMatrixPerspectiveFovLH(
+		XMConvertToRadians(45.f),												// field of view
+		static_cast<float>(m_outputWidth) / static_cast<float>(m_outputHeight), // aspect ratio
+		1.f,																	// near view-plane
+		100.0f);																// far view-plane
+
+	// create the final transform
+	matFinal = matRotate * matView * matProjection;
+
+	XMFLOAT4X4 matFinalFloat;
+	XMStoreFloat4x4(&matFinalFloat, matFinal);
+
+	// set the new values for the constant buffer
+	m_d3dContext->UpdateSubresource(m_constBuffer.Get(), 0, 0, &matFinalFloat, 0, 0);
 }
 
 
@@ -204,8 +240,6 @@ void Application::Render()
 	}
 
 	Clear();
-
-	// TODO: Add your rendering code here.
 
 	 // select which vertex buffer to display
 	UINT stride = sizeof(VERTEX2);

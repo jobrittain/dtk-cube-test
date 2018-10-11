@@ -53,6 +53,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>    m_vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader>    m_pixelShader;
 
+	Microsoft::WRL::ComPtr<ID3D11Buffer>			m_constBuffer;
+
 	Microsoft::WRL::ComPtr<IDXGISwapChain1>         m_swapChain;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  m_renderTargetView;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  m_depthStencilView;
