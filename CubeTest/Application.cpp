@@ -1,7 +1,3 @@
-//
-// Application.cpp
-//
-
 #define NOMINMAX
 
 #include "Application.h"
@@ -38,62 +34,42 @@ using Microsoft::WRL::ComPtr;
 
 namespace fs = std::filesystem;
 
-Application::Application() noexcept :
-	m_window(nullptr),
-	m_outputWidth(800),
-	m_outputHeight(600),
-	m_featureLevel(D3D_FEATURE_LEVEL_9_1)
-{
-}
-
 static std::string GetExecutablePath()
 {
-	std::string s = std::string(MAX_PATH, '/0');
-	auto c = GetModuleFileNameA(NULL, s.data(), s.size());
-	/*if (c > s.length())
-	{
-		s.reserve(c);
-		c = GetModuleFileNameA(NULL, s.data(), s.size());
-	}*/
+	const auto maxPathSize = static_cast<size_t>(MAX_PATH);
+
+	auto s = std::string(maxPathSize, '\000');
+	GetModuleFileNameA(NULL, s.data(), maxPathSize);
+
 	return s.substr(0, s.find_last_of('\\'));
 }
 
 static void ReadAllBytes(const std::string& filename, std::vector<char>& container)
 {
-	std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
-	ifs.seekg(0, std::ios::end);
-	std::ifstream::pos_type pos = ifs.tellg();
+	using ios = std::ios;
 
-	container.reserve(pos);
+	std::ifstream ifs(filename, ios::binary | ios::ate);
+	ifs.seekg(0, ios::end);
+	auto pos = ifs.tellg();
 
-	//ifs.seekg(0, ifs.beg);
-	ifs.seekg(0, std::ios::beg);
+	if (pos < 0)
+	{
+		throw std::exception();
+	}
+
+	container.reserve(static_cast<size_t>(pos));
+
+	ifs.seekg(0, ios::beg);
 	ifs.read(container.data(), pos);
 }
 
-struct VERTEX
+Application::Application() noexcept :
+	m_window(nullptr),
+	m_outputWidth(800),
+	m_outputHeight(600),
+	m_featureLevel(D3D_FEATURE_LEVEL_11_1)
 {
-	VERTEX() {};
-	VERTEX(float x, float y, float z, float r, float g, float b, float a)
-	{
-		auto position = XMFLOAT3(x, y, z);
-		this->Position = XMLoadFloat3(&position);
-		this->Color = PackedVector::XMCOLOR(r, g, b, a);
-	}
-
-	XMVECTOR Position;      // position
-	PackedVector::XMCOLOR Color;   // color
-};
-
-struct VERTEX2
-{
-	XMFLOAT3 Position;      // position
-	XMFLOAT4 Color;   // color
-};
-
-
-ID3D11Buffer *pVBuffer;
-ID3D11InputLayout *pLayout;
+}
 
 // Initialize the Direct3D resources required to run.
 void Application::Initialize(HWND window, int width, int height)
@@ -106,79 +82,7 @@ void Application::Initialize(HWND window, int width, int height)
 
 	CreateResources();
 
-	// TODO: Change the timer settings if you want something other than the default variable timestep mode.
-	// e.g. for 60 FPS fixed timestep update logic, call:
-	/*
-	m_timer.SetFixedTimeStep(true);
-	m_timer.SetTargetElapsedSeconds(1.0 / 60);
-	*/
-
 	auto exeDirPath = GetExecutablePath();
-
-	std::vector<char> p_data, v_data;
-
-	ReadAllBytes(exeDirPath + "\\PixelShader.cso", p_data);
-	ReadAllBytes(exeDirPath + "\\VertexShader.cso", v_data);
-	
-	//m_pixelShader.Reset();
-
-	ThrowIfFailed(m_d3dDevice->CreateVertexShader(v_data.data(), v_data.capacity(), NULL, m_vertexShader.GetAddressOf()));
-	ThrowIfFailed(m_d3dDevice->CreatePixelShader(p_data.data(), p_data.capacity(), NULL, m_pixelShader.GetAddressOf()));
-
-	m_d3dContext->VSSetShader(m_vertexShader.Get(), 0, 0);
-	m_d3dContext->PSSetShader(m_pixelShader.Get(), 0, 0);
-
-	// create the input layout object
-	D3D11_INPUT_ELEMENT_DESC ied[] =
-	{
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
-	};
-
-	ThrowIfFailed(m_d3dDevice->CreateInputLayout(ied, 2, v_data.data(), v_data.capacity(), &pLayout));
-	m_d3dContext->IASetInputLayout(pLayout);
-
-	// Init graphics
-
-	// create a triangle using the VERTEX struct
-	//VERTEX OurVertices[] =
-	//{
-	//	VERTEX(0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f),
-	//	VERTEX(0.45f, -0.5, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f),
-	//	VERTEX(-0.45f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f)
-	//};
-
-	VERTEX2 OurVertices[] =
-	{
-		{ XMFLOAT3(0.0f, 0.5f, 0.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
-		{ XMFLOAT3(0.45f, -0.5, 0.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
-		{ XMFLOAT3(-0.45f, -0.5f, 0.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) }
-	};
-
-	D3D11_BUFFER_DESC bd;
-	ZeroMemory(&bd, sizeof(bd));
-
-	bd.Usage = D3D11_USAGE_DYNAMIC;                // write access access by CPU and GPU
-	bd.ByteWidth = sizeof(VERTEX2) * 3;             // size is the VERTEX struct * 3
-	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;       // use as a vertex buffer
-	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // allow CPU to write in buffer
-
-	ThrowIfFailed(m_d3dDevice->CreateBuffer(&bd, NULL, &pVBuffer));       // create the buffer
-
-	// copy the vertices into the buffer
-	D3D11_MAPPED_SUBRESOURCE ms;
-	m_d3dContext->Map(pVBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);    // map the buffer
-	memcpy(ms.pData, OurVertices, sizeof(OurVertices));                 // copy the data
-	m_d3dContext->Unmap(pVBuffer, NULL);                                      // unmap the buffer
-	
-	ZeroMemory(&bd, sizeof(bd));
-
-	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(XMFLOAT4X4);
-	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-
-	m_d3dDevice->CreateBuffer(&bd, NULL, m_constBuffer.GetAddressOf());
-	m_d3dContext->VSSetConstantBuffers(0, 1, m_constBuffer.GetAddressOf());
 }
 
 // Executes the basic game loop.
@@ -223,12 +127,7 @@ void Application::Update(StepTimer const& timer)
 
 	XMFLOAT4X4 matFinalFloat;
 	XMStoreFloat4x4(&matFinalFloat, matFinal);
-
-	// set the new values for the constant buffer
-	m_d3dContext->UpdateSubresource(m_constBuffer.Get(), 0, 0, &matFinalFloat, 0, 0);
 }
-
-
 
 // Draws the scene.
 void Application::Render()
@@ -241,16 +140,7 @@ void Application::Render()
 
 	Clear();
 
-	 // select which vertex buffer to display
-	UINT stride = sizeof(VERTEX2);
-	UINT offset = 0;
-	m_d3dContext->IASetVertexBuffers(0, 1, &pVBuffer, &stride, &offset);
 
-	// select which primtive type we are using
-	m_d3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	// draw the vertex buffer to the back buffer
-	m_d3dContext->Draw(3, 0);
 
 	Present();
 }
