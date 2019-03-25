@@ -17,4 +17,6 @@ void Cube::Initialize(int dimensionInVoxels)
 	_cubePrimitive = DirectX::GeometricPrimitive::CreateBox(
 		_graphicsDevice->DeviceContext(),
 		DirectX::XMFLOAT3(1, 1, 1));
+
+	_voxels = std::vector<Voxel>(dimensionInVoxels * 3, Voxel { true });
 }
