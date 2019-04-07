@@ -18,11 +18,12 @@ public:
 	GraphicsDevice();
 	
 	void Initialize(const HWND windowHandle, const FLOAT screenWidth, const FLOAT screenHeight);
-	
+	void Reset();
+
 	void UpdateScreenSize(const FLOAT screenWidth, const FLOAT screenHeight);
 
 	void Clear();
-	void Swap();
+	HRESULT Present();
 
 	ID3D11Device* Device() const
 	{ 

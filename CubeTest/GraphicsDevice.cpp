@@ -89,6 +89,15 @@ void GraphicsDevice::Initialize(const HWND windowHandle, const FLOAT screenWidth
 	CoInitialize(nullptr);
 }
 
+void GraphicsDevice::Reset()
+{
+	_depthBuffer.Reset();
+	_renderTargetView.Reset();
+	_swapChain.Reset();
+	_deviceContext.Reset();
+	_device.Reset();
+}
+
 void GraphicsDevice::UpdateScreenSize(const FLOAT screenWidth, const FLOAT screenHeight)
 {
 	D3D11_VIEWPORT viewport = {};
@@ -111,11 +120,11 @@ void GraphicsDevice::Clear()
 
 	_deviceContext->ClearDepthStencilView(
 		_depthBuffer.Get(),
-		D3D11_CLEAR_DEPTH,
+		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f, 0);
 }
 
-void GraphicsDevice::Swap()
+HRESULT GraphicsDevice::Present()
 {
-	_swapChain->Present(0, 0);
+	return _swapChain->Present(0, 0);
 }
