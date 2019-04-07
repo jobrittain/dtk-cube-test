@@ -1,13 +1,17 @@
 #pragma once
 #include "GeometricPrimitive.h"
 #include "GraphicsDevice.h"
+#include "Camera.h"
 
 class Cube
 {
 private:
-	std::shared_ptr<GraphicsDevice> _graphicsDevice;
+	GraphicsDevice& _graphicsDevice;
+	Camera& _camera;
 	std::unique_ptr<DirectX::GeometricPrimitive> _cubePrimitive;
-	int _dimension;
+
+	DirectX::XMVECTOR _position;
+	DirectX::XMVECTOR _rotation;
 
 	struct Voxel
 	{
@@ -17,9 +21,10 @@ private:
 	std::vector<Voxel> _voxels;
 
 public:
-	Cube(std::shared_ptr<GraphicsDevice> device);
+	Cube(GraphicsDevice& device, Camera& camera);
 	~Cube();
 
 	void Initialize(int dimensionInVoxels);
+	void Draw();
 };
 

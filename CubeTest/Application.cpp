@@ -11,7 +11,6 @@
 #include "GraphicsMemory.h"
 //#include "Keyboard.h"
 //#include "Model.h"
-//#include "Mouse.h"
 //#include "PostProcess.h"
 //#include "PrimitiveBatch.h"
 //#include "ScreenGrab.h"
@@ -32,7 +31,7 @@
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
-namespace fs = std::filesystem;
+//namespace fs = std::filesystem;
 
 static std::string GetExecutablePath()
 {
@@ -65,11 +64,12 @@ static void ReadAllBytes(const std::string& filename, std::vector<char>& contain
 
 Application::Application() noexcept :
 	m_window(nullptr),
-	m_outputWidth(800),
-	m_outputHeight(600),
-	m_featureLevel(D3D_FEATURE_LEVEL_11_1)
+	m_featureLevel(D3D_FEATURE_LEVEL_11_1),
+	_mouse(),
+	_device(),
+	_camera(m_outputWidth, m_outputHeight),
+	_cube(_device, _camera)
 {
-	_device = std::make_shared<GraphicsDevice>();
 }
 
 // Initialize the Direct3D resources required to run.
@@ -82,6 +82,15 @@ void Application::Initialize(HWND window, int width, int height)
 	CreateDevice();
 
 	CreateResources();
+	
+	_mouse.SetWindow(window);
+	_mouse.SetMode(Mouse::MODE_RELATIVE);
+
+	_camera.SetPosition(DirectX::XMVectorSet(0, -20, -20, 0));
+	_camera.SetMovementSpeed(1);
+	_camera.SetZoomSpeed(10);
+
+	_cube.Initialize(8);
 
 	auto exeDirPath = GetExecutablePath();
 }
@@ -102,32 +111,52 @@ void Application::Update(StepTimer const& timer)
 {
 	float elapsedTime = float(timer.GetElapsedSeconds());
 
-	auto cameraPosition = XMVectorSet(0.f, 0.f, -2.f, 0.f);
-	auto lookAtPosition = XMVectorSet(0.f, 0.f, 0.f, 0.f);
-	auto upDirection = XMVectorSet(0.f, 1.f, 0.f, 0.f);
+	auto mse = _mouse.GetState();
 
-	static float rotation = 0.0f; rotation += 2.f * elapsedTime;
+	if (mse.positionMode == Mouse::MODE_RELATIVE)
+	{
+		if (mse.leftButton && mse.rightButton)
+		{
+			// TODO: Rotate cube
+		}
+		else if (mse.leftButton || mse.rightButton)
+		{
+			_camera.MouseMove(mse.x, mse.y);
+		}
 
-	XMMATRIX matRotate, matView, matProjection, matFinal;
+		if (mse.scrollWheelValue)
+		{
+			_camera.MouseZoom(mse.scrollWheelValue);
+			_mouse.ResetScrollWheelValue();
+		}
+	}
 
-	// create a rotation matrix
-	matRotate = XMMatrixRotationY(rotation);
+	//auto cameraPosition = XMVectorSet(0.f, 0.f, -2.f, 0.f);
+	//auto lookAtPosition = XMVectorSet(0.f, 0.f, 0.f, 0.f);
+	//auto upDirection = XMVectorSet(0.f, 1.f, 0.f, 0.f);
 
-	// create a view matrix
-	matView = XMMatrixLookAtLH(cameraPosition, lookAtPosition, upDirection);
+	//static float rotation = 0.0f; rotation += 2.f * elapsedTime;
 
-	// create a projection matrix
-	matProjection = XMMatrixPerspectiveFovLH(
-		XMConvertToRadians(45.f),												// field of view
-		static_cast<float>(m_outputWidth) / static_cast<float>(m_outputHeight), // aspect ratio
-		1.f,																	// near view-plane
-		100.0f);																// far view-plane
+	//XMMATRIX matRotate, matView, matProjection, matFinal;
 
-	// create the final transform
-	matFinal = matRotate * matView * matProjection;
+	//// create a rotation matrix
+	//matRotate = XMMatrixRotationY(rotation);
 
-	XMFLOAT4X4 matFinalFloat;
-	XMStoreFloat4x4(&matFinalFloat, matFinal);
+	//// create a view matrix
+	//matView = XMMatrixLookAtLH(cameraPosition, lookAtPosition, upDirection);
+
+	//// create a projection matrix
+	//matProjection = XMMatrixPerspectiveFovLH(
+	//	XMConvertToRadians(45.f),												// field of view
+	//	static_cast<float>(m_outputWidth) / static_cast<float>(m_outputHeight), // aspect ratio
+	//	1.f,																	// near view-plane
+	//	100.0f);																// far view-plane
+
+	//// create the final transform
+	//matFinal = matRotate * matView * matProjection;
+
+	//XMFLOAT4X4 matFinalFloat;
+	//XMStoreFloat4x4(&matFinalFloat, matFinal);
 }
 
 // Draws the scene.
@@ -141,7 +170,7 @@ void Application::Render()
 
 	Clear();
 
-
+	_cube.Draw();
 
 	Present();
 }
@@ -150,8 +179,7 @@ void Application::Render()
 void Application::Clear()
 {
 	// Clear the views.
-	_device->Clear();
-
+	_device.Clear();
 }
 
 // Presents the back buffer contents to the screen.
@@ -160,7 +188,7 @@ void Application::Present()
 	// The first argument instructs DXGI to block until VSync, putting the application
 	// to sleep until the next VSync. This ensures we don't waste any cycles rendering
 	// frames that will never be displayed to the screen.
-	auto hr = _device->Present();
+	auto hr = _device.Present();
 
 	// If the device was reset we must completely reinitialize the renderer.
 	if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
@@ -201,9 +229,8 @@ void Application::OnWindowSizeChanged(int width, int height)
 	m_outputWidth = std::max(width, 1);
 	m_outputHeight = std::max(height, 1);
 
-	_device->UpdateScreenSize(m_outputWidth, m_outputHeight);
-
-	// TODO: Application window is being resized.
+	_device.UpdateScreenSize(m_outputWidth, m_outputHeight);
+	_camera.UpdateScreenSize(m_outputWidth, m_outputHeight);
 }
 
 // Properties
@@ -217,7 +244,7 @@ void Application::GetDefaultSize(int& width, int& height) const
 // These are the resources that depend on the device.
 void Application::CreateDevice()
 {
-	_device->Initialize(m_window, m_outputWidth, m_outputHeight);
+	_device.Initialize(m_window, m_outputWidth, m_outputHeight);
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.
@@ -229,6 +256,6 @@ void Application::OnDeviceLost()
 {
 	// TODO: Add Direct3D resource cleanup here.
 
-	_device->Reset();
+	_device.Reset();
 	CreateDevice();
 }

@@ -6,6 +6,8 @@
 class Camera
 {
 private:
+	DirectX::XMMATRIX _projection;
+
 	DirectX::SimpleMath::Vector3 _position;
 
 	float _movementSpeed;
@@ -15,13 +17,18 @@ private:
 
 	std::mutex posLock;
 
+	void CreateNewProjection(const float screenWidth, const float screenHeight);
+
 public:
-	Camera();
+	Camera(const float screenWidth, const float screenHeight);
 	~Camera();
 
+	void UpdateScreenSize(const float screenWidth, const float screenHeight);
+	void SetPosition(const DirectX::XMVECTOR& position);
 	void SetMovementSpeed(float speed);
 	void SetZoomSpeed(float speed);
 
+	DirectX::SimpleMath::Matrix GetProjectionMatrix() { return _projection; };
 	DirectX::SimpleMath::Matrix GetViewMatrix();
 
 	void MoveUp(float deltaTime);

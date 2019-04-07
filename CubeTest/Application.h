@@ -2,6 +2,10 @@
 
 #include "StepTimer.h"
 #include "GraphicsDevice.h"
+#include "Camera.h"
+#include "Cube.h"
+
+#include "Mouse.h"
 
 #include <Windows.h>
 #include <wrl.h>
@@ -32,7 +36,6 @@ public:
 
 private:
 
-	std::shared_ptr<GraphicsDevice> _device;
 
 	void Update(StepTimer const& timer);
 	void Render();
@@ -47,8 +50,14 @@ private:
 
 	// Device resources.
 	HWND                                            m_window;
-	int                                             m_outputWidth;
-	int                                             m_outputHeight;
+	int                                             m_outputWidth = 800;
+	int                                             m_outputHeight = 600;
+
+	DirectX::Mouse									_mouse;
+
+	GraphicsDevice									_device;
+	Camera											_camera;
+	Cube											_cube;
 
 	D3D_FEATURE_LEVEL                               m_featureLevel;
 

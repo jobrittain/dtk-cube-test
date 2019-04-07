@@ -2,13 +2,32 @@
 
 using namespace DirectX::SimpleMath;
 
-Camera::Camera()
+void Camera::CreateNewProjection(const float screenWidth, const float screenHeight)
 {
+	_projection = DirectX::XMMatrixPerspectiveFovLH(
+		DirectX::XM_PI / 4.f,
+		screenWidth / screenHeight,
+		0.1f,
+		200.f);
 }
 
+Camera::Camera(const float screenWidth, const float screenHeight)
+{
+	CreateNewProjection(screenWidth, screenHeight);
+}
 
 Camera::~Camera()
 {
+}
+
+void Camera::UpdateScreenSize(const float screenWidth, const float screenHeight)
+{
+	CreateNewProjection(screenWidth, screenHeight);
+}
+
+void Camera::SetPosition(const DirectX::XMVECTOR & position)
+{
+	_position = position;
 }
 
 void Camera::SetMovementSpeed(float speed)
@@ -26,9 +45,11 @@ void Camera::SetZoomSpeed(float speed)
 DirectX::SimpleMath::Matrix Camera::GetViewMatrix()
 {
 	std::lock_guard<std::mutex> lock(posLock);
-
-	return Matrix::CreateLookAt(_position,
-		Vector3(_position.x, _position.y - 2, _position.z - 2), Vector3::UnitY);
+	
+	return Matrix::CreateLookAt(
+		_position,
+		Vector3(_position.x, _position.y - 2, _position.z - 2),
+		Vector3::UnitY);
 }
 
 void Camera::MoveUp(float deltaTime)
