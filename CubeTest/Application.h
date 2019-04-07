@@ -1,10 +1,12 @@
 #pragma once
 
 #include "StepTimer.h"
+#include "GraphicsDevice.h"
 
 #include <Windows.h>
 #include <wrl.h>
 #include <d3d11_4.h>
+#include <memory>
 
 class Application
 {
@@ -29,6 +31,8 @@ public:
 	void GetDefaultSize(int& width, int& height) const;
 
 private:
+
+	std::shared_ptr<GraphicsDevice> _device;
 
 	void Update(StepTimer const& timer);
 	void Render();
