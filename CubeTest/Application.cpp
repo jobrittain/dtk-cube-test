@@ -64,7 +64,7 @@ static void ReadAllBytes(const std::string& filename, std::vector<char>& contain
 
 Application::Application() noexcept :
 	m_window(nullptr),
-	m_featureLevel(D3D_FEATURE_LEVEL_11_1),
+	//m_featureLevel(D3D_FEATURE_LEVEL_11_1),
 	_mouse(),
 	_device(),
 	_camera(m_outputWidth, m_outputHeight),

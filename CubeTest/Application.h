@@ -58,20 +58,17 @@ private:
 	GraphicsDevice									_device;
 	Camera											_camera;
 	Cube											_cube;
+	StepTimer										m_timer;
 
-	D3D_FEATURE_LEVEL                               m_featureLevel;
+	//D3D_FEATURE_LEVEL                               m_featureLevel;
 
 
-	Microsoft::WRL::ComPtr<ID3D11Device1>           m_d3dDevice;
-	Microsoft::WRL::ComPtr<ID3D11DeviceContext1>    m_d3dContext;
+	//Microsoft::WRL::ComPtr<ID3D11Device1>           m_d3dDevice;
+	//Microsoft::WRL::ComPtr<ID3D11DeviceContext1>    m_d3dContext;
 
-	Microsoft::WRL::ComPtr<IDXGISwapChain1>         m_swapChain;
-	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  m_renderTargetView;
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  m_depthStencilView;
-
-	// Rendering loop timer.
-	StepTimer                                   m_timer;
-
+	//Microsoft::WRL::ComPtr<IDXGISwapChain1>         m_swapChain;
+	//Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  m_renderTargetView;
+	//Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  m_depthStencilView;
 
 	inline void ThrowIfFailed(HRESULT hr)
 	{
