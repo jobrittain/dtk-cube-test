@@ -12,6 +12,7 @@ private:
 
 	DirectX::XMVECTOR _position;
 	DirectX::XMVECTOR _rotation;
+	DirectX::XMVECTOR _color;
 
 	struct Voxel
 	{
@@ -24,7 +25,10 @@ public:
 	Cube(GraphicsDevice& device, Camera& camera);
 	~Cube();
 
-	void Initialize(int dimensionInVoxels);
+	void Initialize(
+		int dimensionInVoxels, 
+		DirectX::XMVECTOR position,
+		DirectX::XMVECTOR color = DirectX::Colors::White);
 	void Draw();
 };
 

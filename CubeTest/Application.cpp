@@ -86,11 +86,11 @@ void Application::Initialize(HWND window, int width, int height)
 	_mouse.SetWindow(window);
 	_mouse.SetMode(Mouse::MODE_RELATIVE);
 
-	_camera.SetPosition(DirectX::XMVectorSet(0, -20, -20, 0));
+	_camera.SetPosition(DirectX::XMVectorSet(0, 20, 20, 0));
 	_camera.SetMovementSpeed(1);
 	_camera.SetZoomSpeed(10);
 
-	_cube.Initialize(8);
+	_cube.Initialize(8, DirectX::XMVectorZero());
 
 	auto exeDirPath = GetExecutablePath();
 }

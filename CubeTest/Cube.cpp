@@ -15,11 +15,17 @@ Cube::~Cube()
 {
 }
 
-void Cube::Initialize(int dimensionInVoxels)
+void Cube::Initialize(
+	int dimensionInVoxels, 
+	DirectX::XMVECTOR position, 
+	DirectX::XMVECTOR color)
 {
+	_position = position;
+	_color = color;
+
 	_cubePrimitive = DirectX::GeometricPrimitive::CreateBox(
 		_graphicsDevice.DeviceContext(),
-		DirectX::XMFLOAT3(10, 10, 10));
+		DirectX::XMFLOAT3(1, 1, 1));
 
 	_voxels = std::vector<Voxel>(dimensionInVoxels * 3, Voxel { true });
 }
@@ -31,7 +37,8 @@ void Cube::Draw()
 	auto worldMatrix = rotationMatrix * translationMatrix;
 
 	_cubePrimitive->Draw(
-		DirectX::XMMatrixIdentity(), 
+		worldMatrix, 
 		_camera.GetViewMatrix(), 
-		_camera.GetProjectionMatrix());
+		_camera.GetProjectionMatrix(),
+		_color);
 }

@@ -4,7 +4,7 @@ using namespace DirectX::SimpleMath;
 
 void Camera::CreateNewProjection(const float screenWidth, const float screenHeight)
 {
-	_projection = DirectX::XMMatrixPerspectiveFovLH(
+	_projection = DirectX::XMMatrixPerspectiveFovRH(
 		DirectX::XM_PI / 4.f,
 		screenWidth / screenHeight,
 		0.1f,
@@ -46,9 +46,9 @@ DirectX::SimpleMath::Matrix Camera::GetViewMatrix()
 {
 	std::lock_guard<std::mutex> lock(posLock);
 	
-	return Matrix::CreateLookAt(
+	return DirectX::XMMatrixLookAtRH(
 		_position,
-		Vector3(_position.x, _position.y - 2, _position.z - 2),
+		Vector3(_position.x, _position.y - 1, _position.z - 1),
 		Vector3::UnitY);
 }
 
