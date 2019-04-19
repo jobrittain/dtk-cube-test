@@ -2,18 +2,20 @@
 
 using namespace DirectX::SimpleMath;
 
-void Camera::CreateNewProjection(const float screenWidth, const float screenHeight)
+void Camera::CreateNewProjection()
 {
 	_projection = DirectX::XMMatrixPerspectiveFovRH(
 		DirectX::XM_PI / 4.f,
-		screenWidth / screenHeight,
+		_screenWidth / _screenHeight,
 		0.1f,
 		200.f);
 }
 
-Camera::Camera(const float screenWidth, const float screenHeight)
+Camera::Camera(const float screenWidth, const float screenHeight) : 
+	_screenWidth(screenWidth), 
+	_screenHeight(screenHeight)
 {
-	CreateNewProjection(screenWidth, screenHeight);
+	CreateNewProjection();
 }
 
 Camera::~Camera()
@@ -22,7 +24,10 @@ Camera::~Camera()
 
 void Camera::UpdateScreenSize(const float screenWidth, const float screenHeight)
 {
-	CreateNewProjection(screenWidth, screenHeight);
+	_screenWidth = screenWidth;
+	_screenHeight = screenHeight;
+
+	CreateNewProjection();
 }
 
 void Camera::SetPosition(const DirectX::XMVECTOR & position)
@@ -40,6 +45,19 @@ void Camera::SetZoomSpeed(float speed)
 {
 	_zoomSpeed = speed;
 	_keyZoomSpeed = speed + 20;
+}
+
+DirectX::XMVECTOR Camera::GetScreenCoordInWorldSpace(const int screenX, const int screenY)
+{
+	// Translate to NDC (normalized device coordinate) space
+	auto screenNdcX = (screenX + 0.5) / _screenWidth;
+	auto screenNdcY = (screenY + 0.5) / _screenHeight;
+
+	// Translate to screen space
+	auto screenSpaceX = 2 * screenNdcX - 1;
+	auto screenSpaceY = 1 - 2 * screenNdcY;
+
+
 }
 
 DirectX::SimpleMath::Matrix Camera::GetViewMatrix()

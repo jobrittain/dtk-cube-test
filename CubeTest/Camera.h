@@ -10,6 +10,8 @@ private:
 
 	DirectX::SimpleMath::Vector3 _position;
 
+	float _screenWidth;
+	float _screenHeight;
 	float _movementSpeed;
 	float _keyMovementSpeed;
 	float _zoomSpeed;
@@ -17,7 +19,7 @@ private:
 
 	std::mutex posLock;
 
-	void CreateNewProjection(const float screenWidth, const float screenHeight);
+	void CreateNewProjection();
 
 public:
 	Camera(const float screenWidth, const float screenHeight);
@@ -28,6 +30,7 @@ public:
 	void SetMovementSpeed(float speed);
 	void SetZoomSpeed(float speed);
 
+	DirectX::XMVECTOR GetScreenCoordInWorldSpace(const int screenX, const int screenY);
 	DirectX::SimpleMath::Matrix GetProjectionMatrix() { return _projection; };
 	DirectX::SimpleMath::Matrix GetViewMatrix();
 
