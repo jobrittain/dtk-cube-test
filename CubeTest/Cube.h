@@ -8,9 +8,14 @@ class Cube
 private:
 	GraphicsDevice& _graphicsDevice;
 	Camera& _camera;
+	
 	std::unique_ptr<DirectX::GeometricPrimitive> _cubePrimitive;
+	std::unique_ptr<DirectX::GeometricPrimitive> _voxelPrimitive;
 
-	DirectX::XMVECTOR _position;
+	DirectX::BoundingOrientedBox _cubeBoundingBox;
+
+	DirectX::XMVECTOR _positionCenter;
+	DirectX::XMVECTOR _positionVoxelZero;
 	DirectX::XMVECTOR _rotation;
 	DirectX::XMVECTOR _color;
 

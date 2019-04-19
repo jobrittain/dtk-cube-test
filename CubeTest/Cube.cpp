@@ -6,7 +6,7 @@ Cube::Cube(GraphicsDevice& device, Camera& camera) :
 	_graphicsDevice(device),
 	_camera(camera)
 {
-	_position = DirectX::XMVectorZero();
+	_positionCenter = DirectX::XMVectorZero();
 	_rotation = DirectX::XMQuaternionIdentity();
 }
 
@@ -20,10 +20,22 @@ void Cube::Initialize(
 	DirectX::XMVECTOR position, 
 	DirectX::XMVECTOR color)
 {
-	_position = position;
+	_positionCenter = position;
+
+	DirectX::XMFLOAT3 positionStored;
+	DirectX::XMStoreFloat3(&positionStored, position);
+	
+	_positionVoxelZero = DirectX::XMVectorSet(
+		positionStored.x - (dimensionInVoxels / 2) + 0.5f, 
+		positionStored.y - (dimensionInVoxels / 2) + 0.5f, 
+		positionStored.z - (dimensionInVoxels / 2) + 0.5f,
+		0);
 	_color = color;
 
 	_cubePrimitive = DirectX::GeometricPrimitive::CreateBox(
+		_graphicsDevice.DeviceContext(),
+		DirectX::XMFLOAT3(dimensionInVoxels, dimensionInVoxels, dimensionInVoxels));
+	_voxelPrimitive = DirectX::GeometricPrimitive::CreateBox(
 		_graphicsDevice.DeviceContext(),
 		DirectX::XMFLOAT3(1, 1, 1));
 
@@ -33,12 +45,25 @@ void Cube::Initialize(
 void Cube::Draw()
 {
 	auto rotationMatrix = DirectX::XMMatrixRotationQuaternion(_rotation);
-	auto translationMatrix = DirectX::XMMatrixTranslationFromVector(_position);
-	auto worldMatrix = rotationMatrix * translationMatrix;
+	auto cubeTranslation = DirectX::XMMatrixTranslationFromVector(_positionCenter);
+	auto cubeWorld = rotationMatrix * cubeTranslation;
 
 	_cubePrimitive->Draw(
-		worldMatrix, 
+		cubeWorld, 
 		_camera.GetViewMatrix(), 
 		_camera.GetProjectionMatrix(),
-		_color);
+		DirectX::Colors::LimeGreen,
+		nullptr,
+		true);
+
+	{
+		auto voxelTranslation = DirectX::XMMatrixTranslationFromVector(_positionVoxelZero);
+		auto voxelWorld = rotationMatrix * voxelTranslation;
+		_voxelPrimitive->Draw(
+			voxelWorld,
+			_camera.GetViewMatrix(),
+			_camera.GetProjectionMatrix(),
+			_color);
+	}
+
 }
