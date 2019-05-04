@@ -60,6 +60,11 @@ private:
 	Cube											_cube;
 	StepTimer										m_timer;
 
+	std::unique_ptr<DirectX::GeometricPrimitive>    _mouseCube;
+	bool _drawMouseCube = false;
+	int _mousePosX;
+	int _mousePosY;
+
 	//D3D_FEATURE_LEVEL                               m_featureLevel;
 
 

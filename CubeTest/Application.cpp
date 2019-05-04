@@ -84,7 +84,8 @@ void Application::Initialize(HWND window, int width, int height)
 	CreateResources();
 	
 	_mouse.SetWindow(window);
-	_mouse.SetMode(Mouse::MODE_RELATIVE);
+	_mouse.SetMode(Mouse::MODE_ABSOLUTE);
+	_mouseCube = DirectX::GeometricPrimitive::CreateCube(_device.DeviceContext(), .05f);
 
 	_camera.SetPosition(DirectX::XMVectorSet(0, 20, 20, 0));
 	_camera.SetMovementSpeed(1);
@@ -115,19 +116,29 @@ void Application::Update(StepTimer const& timer)
 
 	if (mse.positionMode == Mouse::MODE_RELATIVE)
 	{
-		if (mse.leftButton && mse.rightButton)
-		{
-			// TODO: Rotate cube
-		}
-		else if (mse.leftButton || mse.rightButton)
+		if (mse.leftButton || mse.rightButton)
 		{
 			_camera.MouseMove(mse.x, mse.y);
 		}
-
+		
 		if (mse.scrollWheelValue)
 		{
 			_camera.MouseZoom(mse.scrollWheelValue);
 			_mouse.ResetScrollWheelValue();
+		}
+	}
+	else
+	{
+		if (mse.leftButton)
+		{
+			// TODO: Rotate cube
+			_mousePosX = mse.x;
+			_mousePosY = mse.y;
+			_drawMouseCube = true;
+		}
+		else
+		{
+			_drawMouseCube = false;
 		}
 	}
 
@@ -169,6 +180,18 @@ void Application::Render()
 	}
 
 	Clear();
+
+	if (_drawMouseCube)
+	{
+		auto mouseCubePos = _camera.GetScreenCoordInWorldSpace(_mousePosX, _mousePosY);
+		auto cameraRotation = DirectX::XMMatrixRotationX(-DirectX::XM_PI / 4.f);
+
+		_mouseCube->Draw(
+			cameraRotation * DirectX::XMMatrixTranslationFromVector(mouseCubePos),
+			_camera.GetViewMatrix(),
+			_camera.GetProjectionMatrix(),
+			Colors::Aquamarine);
+	}
 
 	_cube.Draw();
 
