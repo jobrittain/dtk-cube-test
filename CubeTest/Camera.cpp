@@ -57,7 +57,20 @@ DirectX::XMVECTOR Camera::GetScreenCoordInWorldSpace(const int screenX, const in
 	auto screenSpaceX = 2 * screenNdcX - 1;
 	auto screenSpaceY = 1 - 2 * screenNdcY;
 
+	// Translate to camera space
+	auto aspectRatio = _screenWidth / _screenHeight;
+	
+	auto fovAngle = DirectX::XM_PI / 4.f;
+	auto halfVertImagePlane = tan(fovAngle / 2.f);
+	
+	auto cameraSpaceX = (2 * screenSpaceX - 1) * aspectRatio * halfVertImagePlane;
+	auto cameraSpaceY = (1 - 2 * screenSpaceY) * halfVertImagePlane;
 
+	// Translate into world space
+	auto cameraTranslation = DirectX::XMMatrixTranslation(cameraSpaceX, cameraSpaceY, -1);
+	auto worldPoint = DirectX::XMVector3Transform(_position, cameraTranslation);
+	
+	return worldPoint;
 }
 
 DirectX::SimpleMath::Matrix Camera::GetViewMatrix()
